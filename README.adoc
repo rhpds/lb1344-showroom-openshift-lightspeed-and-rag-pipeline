@@ -1,3 +1,4 @@
+=== lb1344-bring-in-your-own-knowledge-to-openshift-lightspeed-and-rag-pipeline
 === Getting Started
 
 This template is designed to be used as a base for your showroom lab guides.
