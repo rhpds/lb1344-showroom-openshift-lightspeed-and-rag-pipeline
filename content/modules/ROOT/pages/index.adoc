@@ -1,43 +1,50 @@
 = {lab_name}
 
-The `lab_name` var, known as an asciidoc attribute, above was set in `./content/antora.yml` and can be used to set the lab_name or title of your content.
-You are both free to change its value and if you prefer to use a different var name, you can change the value of `lab_name`, for example to `title` in `./content/antora.yml` and then reference it in your content as `\{title}`. +
+OpenShift Lightspeed is a virtual assistant for the Red Hat OpenShift Container
+Platform. It helps users with general knowledge, troubleshooting, skill
+development, root cause analysis, and more. Powered by large language models
+(LLMs) and retrieval-augmented generation (RAG), OpenShift Lightspeed makes
+OpenShift more accessible to users and helps increase user productivity.
 
-image::rhel-logo-black.jpg[rhel-logo-black,55%,55%]
+== OpenShift Lightspeed Architecture
+OpenShift Lightspeed today is a relatively small and lightweight system that
+you deploy into each OpenShift Container Platform cluster. The operator deploys
+three components:
 
-== Variables
+* A web console plugin (the chat interface)
+* A back-end server (the chat interface calls the server)
+* A PostgreSQL database (for temporary conversation caching)
 
-Other vars can also be set there, such as `ssh_user` and `ssh_password`, and referenced inline in the lab content by using the `\{foo}` syntax.
+image::ols-arch.png[]
 
-This is another var, or asciidoc attribute, from `./content/antora.yml` {my_var}
+You can also see that OpenShift Lightspeed talks to a model provider. In the
+case of this lab environment, that provider is Azure OpenAI using the GPT-4o
+model.
 
-== Writing your lab
+The little green box says RAG which stands for retrieval-augmented generation.
 
-Whatever type of content you are writing we'll refer to your *content* as "your lab" in this document.
 
-=== Lab structure
+== RAG Basics
+RAG is a way of providing additional context to an LLM to help improve the
+quality of responses. When relying on only the LLM, two common problems can
+arise:
 
-Wether you are writing a lab
+1. Hallucination - the model invents an answer that is not grounded in fact,
+  even when the model was trained with the answer 
+2. Missing data - the model was
+  never trained on the required information in the first place, so answers could
+  be anything
 
-* First, we will build a monolithic application already compiled as RPM packages and put it into a container. This will allow us to deploy the application, copy it between machines, and update it separately from the operating system. This process affords us a portable and easily maintained component instead of tightly coupling the application with your operating system maintenance.
+When providing contextual information to the LLM at the time of asking a
+question, the response quality can be dramatically improved, even if the model
+was never trained on the specific contextual information.
 
-* In closing we will build a second container on a different operating system version that makes an application not packaged into RPMs. This will be similar to a web application deployment, positioning the correct files at the right locations. To do this, we will pull a project from GitHub and position the component files within our container image. The purpose of this is to achieve a portable application container that can deploy on several different versions of Red Hat Enterprise Linux. This also provides the benefit of decoupling your application maintenance, which would all happen by building new containers versus operating system maintenance. The container is no longer reliant on the operating system installed on the machine where the application is deployed.
+OpenShift Lightspeed will grab the relevant OpenShift Container Platform
+documentation to match the cluster version when it deploys, and it uses that
+documentation as the additional context for answering user questions.
 
-. Now let's examine this cluster a bit more by describing the cluster (the `$GUID` environment variable is already set for you so you can immediately describe your individual cluster):
-+
-[source,sh,role=execute]
-----
-podman ps
-----
-+
-.Sample Output
-[source,texinfo,subs="attributes"]
-----
-CONTAINER ID  IMAGE                        COMMAND           CREATED      STATUS      PORTS                 NAMES
-2dcfee9e50c4  docker.io/library/httpd:2.4  httpd-foreground  3 hours ago  Up 3 hours  0.0.0.0:8080->80/tcp  showroom-httpd
-----
+The specific details of vector databases and embedding and encoding are outside
+the scope of this lab.
 
-=== Lab Access
-
-The terminal window to your right is *already* logged into the lab environment as the `{ssh_user}` user via `ssh`. 
-All steps of this lab are to be completed as the `{ssh_user}` user.
+Now, with your understanding of the fundamentals, let's try and use OpenShift
+Lightspeed.

@@ -1,138 +1,138 @@
-= Managing an Application from GitHub
+= Add Your Knowledge
+Most organizations that have been using OpenShift Container Platform for any
+length of time have developed their own policies, procedures, templates, and
+other organizationally-specific information about OpenShift.
 
-In the first half of this workshop, we packaged an application into this portable container format manually using rpms.
-In the second half, we will consider that you may want to manage software from GitHub or some kind of software versioning application.
-Rather than installing rpms, we have individual software files and pull them out of that version control into a group of systems.
+As you learned earler, OpenShift Lightspeed only uses the OpenShift
+documentation to support answers by default. So, how can you get your important
+internal knowledge into the system? Well, there's a process for that.
 
-== Install RHEL 8 UBI
+NOTE: This is currently a Technology Preview feature of OpenShift Lightspeed. 
+The method of using `podman` to build and push a RAG database from local
+markdown files is just a first draft and will be replaced by a more
+sophisticated system in the future. If this feature is important to you, please
+take time to talk to us after the lab or schedule a meeting to discuss your
+particular scenarios.
 
-In this lab, we will be using a different Red Hat Enterprise Linux version in my container. 
+== Examine the documentation
+In the web terminal, you can SSH into a system that already has ACME's internal
+documentation downloaded.
 
-. Verify the host system release 
+xx
 
-+
-[source,bash]
-----
-cat /etc/redhat-release
-----
-+ 
-NOTE: The `bastion` system is Red Hat Enterprise Linux 9, and when you built the previous container, you used the UBI9 image. This means both the image and the container were built off the same Red Hat Enterprise Linux packages. 
+The documentation is located in the `byok` folder, and, right now, consists of 
+just two documents:
 
-. As we did previously in this lab, Use `buildah from` to pull down the Red Hat Enterprise Linux 8 UBI.
+* the specific ACME process for horizontal pod autoscaling
+* the specific ACME process for adding GPU nodes
 
-+
-[source,bash]
-----
-buildah from registry.access.redhat.com/ubi8/ubi
-----
+Take a look at those files using `cat`, `less`, or your favorite tool to get
+an understanding of what they are discussing.
 
-NOTE: Because you already pulled one image named `ubi-working-container` this one is called `ubi-working-container-1`. 
+== Build the RAG database
+In the architecture slide, you saw how OpenShift Lightspeed used a RAG database
+inside the server that provided the relevant documentation to support user 
+questions. Now, you will use a `podman`-based process to build another RAG
+database image that you will then tell OpenShift Lightspeed to use.
 
-[#prerequisites]
-== Install Prerequisites
+Building the RAG database is pretty trivial, as we have provided a pre-packaged
+container image with the required software.
 
-Now that you have a working container, you will use the same process as before installing all the prerequisites, changing config files, and manipulating the contents of this container to be in the desired state.
+NOTE: If you have an extreme amount of internal documentation, the database
+creation process could take several minutes, as it involves a
+computationally-intensive process called _embedding_. GPUs can improve this
+time, but you are unlikely to be using this process very often (unless your
+internal documentation is changing very frequently).
 
-The software you will install is a JavaScript-based game that runs on a web browser. As before in the lab, use dnf to install software inside the container. 
+Make sure to change your directory as follows:
 
-. Use `buildah run` and install Apache (`httpd`) into the `ubi-working-container-1` container. 
-+
-[source,bash]
-----
-buildah run ubi-working-container-1 -- dnf -y install httpd
-----
+xx
 
-== Enable Service
+Then, run the following `podman` command to build the database:
 
-The next thing to do is to use a systemctl to enable the service. The ubi-init provides full systemd service to the container.
-This will start up any of the services that are enabled. 
+  podman run -e OUT_IMAGE_TAG=latest -it --rm --device=/dev/fuse \
+	-v <dir_tree_with_markdown_files>:/markdown:Z \
+	-v <dir_for_image_tar>:/output:Z \
+	quay.io/syedriko/tool:latest
 
-. Enable the `httpd` service using `buildah run`
+Next, tag the image appropriately so that it can be pushed to the registry:
 
-+
-[source,bash]
-----
-buildah run ubi-working-container-1 -- systemctl enable httpd
-----
+    podman tag localhost/latest $(oc get route default-route \
+		-n openshift-image-registry \
+		--template='{{ .spec.host }}')/openshift-lightspeed/acme-byok:latest
 
-NOTE: The UBI standard image doesn't have systemd installed on it by default. The `ubi-init` container image does include systemd. Plan accordingly to which image you use to build applications.  
+Now that you have built the image, you will need to push it into the internal
+OpenShift Container Platform registry. First, go to the OpenShift web console
+and then click the username in the upper-right and then click _Copy Login
+Command_.
 
-== Explore Source Materials
+Now, copy the login command, and paste it in the web terminal. It should look
+something like:
 
-A GitHub repository has already been synchronized to `/home/devops/clumsy-bird/` This repository contains the configurations for your application.
+    oc login ....
 
-. Verify the repository is cloned inside the `/home/devops/` directory
-+
-[source,bash]
-----
-cd /home/devops/
-----
+== Push the Image
+Now, login to the container registry with the following command:
 
-+
-[source,bash]
-----
-git clone https://github.com/ellisonleao/clumsy-bird
-----
-+
-NOTE: The output states that the software has already been checked out. 
-+
-. Explore the JavaScript contents, index files, and everything else that we need for this web-based JavaScript software.
-+
-[source,bash,role=execute]
-----
-ls clumsy-bird
-----
+    podman login -u admin -p $(oc whoami -t) $(oc get route default-route \
+		-n openshift-image-registry --template='{{ .spec.host }}')
 
-== Add Source Materials to Container
+Lastly, push the image you just built:
 
-. Now that you have verified the source materials exist, you will put the software inside of my container image using the `buildah copy` command.
-+
-[source,bash]
-----
-buildah copy ubi-working-container-1 clumsy-bird /var/www/html
-----
+    podman push blah
 
-[#container]
-== Enable Container in Background
+== Modify the OpenShift Lightspeed Configuration
+Now that the image is available in an accessible container registry, you have to 
+tell the OpenShift Lightspeed Operator to deploy the new RAG database alongside
+the existing one.
 
-In the previous section of this lab, you ran the game natively through interactive mode. Because you are now building a web application you will need to run the container in the background and access it through a web address. 
+In the OpenShift Console, click _Operators_ and then _Installed Operators_ in
+the left hand navigation. Then, make sure to adjust the project dropdown to 
+"All Namespaces" at the top of the screen. 
 
-. Execute `buildah config` to specify a port and initialize the container. 
+Next, click the OpenShift Lightspeed operator in the list. 
 
-+
-[source,bash]
-----
-buildah config --port 80 --cmd "/usr/sbin/init" ubi-working-container-1
-----
+Next, click the `OLSConfig` tab, and then click the single `OLSConfig` instance
+called `cluster` in the list.
 
-NOTE: The command makes a configuration change to this container. I'm configuring this container to accept connections to its port 80. When the container starts up, it should run the init command, which, in this case, is going to be the Apache daemon right from earlier when I enabled it.
+Finally, select the YAML tab.
 
-== Commit Container and Deploy
+In the YAML editor, you will want to insert the following yaml segment just before
+the `status` block:
 
-. Now that we have a container in a working configured state, it is time to make that permanent by committing it to a container image called `clumsy-bird`
-+
-[source,bash]
-----
-buildah commit ubi-working-container-1 clumsy-bird
-----
+    rag:
+      - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
+        indexID: vector_db_index
+        indexPath: /rag/vector_db
 
-. Verify that the image was created with `podman`
-+
-[source,bash]
-----
-podman images
-----
-+
-. Run the container Now it's time to run the container. 
-+
-[source,bash]
-----
-podman run -d -p 8500:80 clumsy-bird
-----
+Your full YAML should look something like:
 
-== Verify Application
+    ...
+      ols:
+		...
+        queryFilters:
+          - name: ip-address
+            pattern: '((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}'
+            replaceWith: <IP-ADDRESS>
+        rag:
+          - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
+            indexID: vector_db_index
+            indexPath: /rag/vector_db
+    status:
+      conditions:
 
-Verify that the application is running by navigating to
+NOTE: You can define multiple RAG databases this way, if you want to add
+multiple sources.
 
-http://bastion.{guid}.example.opentlc.com:8500
+Click the blue _Save_ button.
 
+== Wait for Lightspeed
+Click the _Workloads_ navigation item on the left, then _Pods_. Next, find the
+_openshift-lightspeed_ project in the dropdown (you will have to toggle the 
+switch _Show default namespaces_).
+
+Wait for the `openshift-lightspeed-...` API server pod to start and for both
+containers to be ready, and for the previous deployment's containers to
+terminate and disappear.
+
+Next, let's test that it worked!
