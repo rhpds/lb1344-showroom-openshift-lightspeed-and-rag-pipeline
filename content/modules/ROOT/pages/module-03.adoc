@@ -43,3 +43,10 @@ sent with the user's question.
 == More Extra Extra Credit
 Take time to explore the
 https://docs.redhat.com/en/documentation/red_hat_openshift_lightspeed/1.0tp1/html/configure/ols-configuring-openshift-lightspeed#ols-filtering-and-redacting-information_ols-configuring-openshift-lightspeed[query filter functionality].
+
+== Thank You!
+We love user feedback and talking to customers. If you're interested in meeting
+with the OpenShift Lightspeed team, please visit the product page and fill out 
+the form to https://www.redhat.com/en/technologies/cloud-computing/openshift/lightspeed[contact us]:
+
+image::lightspeed-page-qr.gif[]
