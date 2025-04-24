@@ -1,7 +1,7 @@
 ---
 site:
-  title: Showroom Template Demo
-  url: https://redhat-scholars.github.io/course-template
+  title: "LB1344: Bring Your Knowledge to OpenShift Lightspeed"
+  url: /modules/index.html
   start_page: modules::index.adoc
 
 content:

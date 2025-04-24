@@ -1,12 +1,12 @@
 name: modules
-title: Default Title
+title: "LB1344: Bring Your Knowledge to OpenShift Lightspeed"
 version: master
 nav:
   - modules/ROOT/nav.adoc
 
 asciidoc:
   attributes:
-    lab_name: "I'm the lab_name var"
+    lab_name: "LB1344: Bring Your Knowledge to OpenShift Lightspeed"
     release-version: master
     page-pagination: true
     my_var: "foo"
@@ -15,5 +15,5 @@ asciidoc:
     ssh_password: devops
     ssh_command: ssh someone@example.com
     page-links:
-    - url: https://redhat.com
-      text: Red Hat
+    - url: https://docs.redhat.com/en/documentation/red_hat_openshift_lightspeed/1.0tp1/html/about/ols-about-openshift-lightspeed
+      text: OpenShift Lightspeed Documentation
