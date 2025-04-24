@@ -27,7 +27,10 @@ image::ols-interface.png[]
 
 Why don't you start out by asking an easy question like:
 
-    How do I configure a horizontal pod autoscaler?
+[source,sh,role="execute",subs=attributes+]
+----
+How do I configure a horizontal pod autoscaler?
+----
 
 OpenShift Lightspeed should provide a detailed answer about how to do it. And,
 if you scroll to the bottom of the chat window, you will see that OpenShift 
@@ -58,13 +61,19 @@ image::attach-button.png[]
 
 Then, simply ask:
 
-    What's wrong with this pod?
+[source,sh,role="execute",subs=attributes+]
+----
+What's wrong with this pod?
+----
 
 You should get some detailed information about nodes and node selectors. 
 
 Now go ahead and attach the complete YAML, and then simply ask:
 
-    Can you fix it?
+[source,sh,role="execute",subs=attributes+]
+----
+Can you fix it?
+----
 
 Fortunately, this is a pretty obvious typo: `worker` is spelled wrong. And,
 GPT-4o is a very capable model, so it suggests that this typo might be the

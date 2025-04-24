@@ -7,7 +7,10 @@ knowledge and content.
 Go ahead and open the OpenShift Lightspeed chat window and then ask the
 following question:
 
-    How do I use a horizontal pod autoscaler at ACME corp?
+[source,sh,role="execute",subs=attributes+]
+----
+How do I use a horizontal pod autoscaler at ACME corp?
+----
 
 You should see an answer that refers to the prohibition on autoscalers and the
 specific processes required to get one.

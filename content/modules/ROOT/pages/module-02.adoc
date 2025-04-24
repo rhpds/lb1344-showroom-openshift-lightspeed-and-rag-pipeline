@@ -15,13 +15,17 @@ take time to talk to us after the lab or schedule a meeting to discuss your
 particular scenarios.
 
 == Examine the documentation
-In the web terminal, you can SSH into a system that already has ACME's internal
-documentation downloaded.
+In the web terminal, clone the lab repository:
 
-xx
+[source,sh,role="execute",subs=attributes+]
+----
+cd
+git clone https://github.com/rhpds/lb1344-showroom-openshift-lightspeed-and-rag-pipeline
+----
 
-The documentation is located in the `byok` folder, and, right now, consists of 
-just two documents:
+The documentation is located in the
+`~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline/byok` folder, and,
+right now, consists of just two documents:
 
 * the specific ACME process for horizontal pod autoscaling
 * the specific ACME process for adding GPU nodes
@@ -29,7 +33,39 @@ just two documents:
 Take a look at those files using `cat`, `less`, or your favorite tool to get
 an understanding of what they are discussing.
 
-== Build the RAG database
+== OpenShift CLI
+You will need to perform a few commands using the OpenShift CLI (`oc`). This 
+requires being logged into the cluster. Your terminal session should already
+be logged into the OpenShift cluster:
+
+[source,sh,role="execute",subs=attributes+]
+----
+oc whoami
+----
+
+If you don't see `system:admin` as the output, you may need to log in again.
+
+== CLI Login (OPTIONAL!)
+If you were not already logged in when running `oc whoami`, follow the next
+steps. Otherwise, skip this section.
+
+If you go to the OpenShift web console, you will see your login name (`admin`)
+in the upper right. Click it, and select _Copy login command_ from the
+dropdown.
+
+This will open a new window (and may require reauthentication). You will find an
+`oc login` command there to copy and paste into the terminal. Copy the line that 
+says "Log in with this token". It will look something like:
+
+[source,sh,role="execute",subs=attributes+]
+----
+oc login --token=xx --server=https://api.cluster-xx.opentlc.com:6443
+----
+
+NOTE: Do not try and copy and paste the above command. Use the one from the 
+webpage that you opened.
+
+== Build the RAG Database Image
 In the architecture slide, you saw how OpenShift Lightspeed used a RAG database
 inside the server that provided the relevant documentation to support user 
 questions. Now, you will use a `podman`-based process to build another RAG
@@ -46,40 +82,91 @@ internal documentation is changing very frequently).
 
 Make sure to change your directory as follows:
 
-xx
+[source,sh,role="execute",subs=attributes+]
+----
+cd ~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline
+----
+
+You will want to create an output folder to hold the tarball/image created by
+this build process:
+
+[source,sh,role="execute",subs=attributes+]
+----
+mkdir ~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline/output
+----
 
 Then, run the following `podman` command to build the database:
 
-  podman run -e OUT_IMAGE_TAG=latest -it --rm --device=/dev/fuse \
-	-v <dir_tree_with_markdown_files>:/markdown:Z \
-	-v <dir_for_image_tar>:/output:Z \
-	quay.io/syedriko/tool:latest
+[source,sh,role="execute",subs=attributes+]
+----
+podman run -e OUT_IMAGE_TAG=latest -it --rm --device=/dev/fuse \
+-v ~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline/byok:/markdown:Z \
+-v ~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline/output:/output:Z \
+quay.io/thoraxe/byok-tool:250422
+----
 
+If that worked successfully, you should see something like:
+
+    ...
+    Successfully tagged localhost/latest:latest
+    ea524f61b933d3fff369e5c55b27d9f845a378332e77a3fb0254c915f483b8da
+    Getting image source signatures
+    Copying blob 0ee7f3003527 done   | 
+    Copying blob 1a4bd3506461 done   | 
+    Copying blob 6554fa50686e done   | 
+    Copying config ea524f61b9 done   | 
+    Writing manifest to image destination
+
+This will produce a tarball in the output folder that you created previously. 
+Next you can load that tarball (to the local podman image store) and then push
+it into your OpenShift registry.
+
+Load the image:
+
+[source,sh,role="execute",subs=attributes+]
+----
+podman load -i ~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline/output/latest.tar
+----
+
+== Tag the Image
 Next, tag the image appropriately so that it can be pushed to the registry:
 
-    podman tag localhost/latest $(oc get route default-route \
-		-n openshift-image-registry \
-		--template='{{ .spec.host }}')/openshift-lightspeed/acme-byok:latest
+[source,sh,role="execute",subs=attributes+]
+----
+podman tag localhost/latest:latest $(oc get route default-route \
+-n openshift-image-registry \
+--template='{{ .spec.host }}')/openshift-lightspeed/acme-byok:latest
+----
 
-Now that you have built the image, you will need to push it into the internal
-OpenShift Container Platform registry. First, go to the OpenShift web console
-and then click the username in the upper-right and then click _Copy Login
-Command_.
+To check if that completed successfully, list the images with:
 
-Now, copy the login command, and paste it in the web terminal. It should look
-something like:
+[source,sh,role="execute",subs=attributes+]
+----
+podman images
+----
 
-    oc login ....
+And you should see your re-tagged image present.
+
+Now that you have tagged the image, you will need to push it into the internal
+OpenShift Container Platform registry.
 
 == Push the Image
 Now, login to the container registry with the following command:
 
-    podman login -u admin -p $(oc whoami -t) $(oc get route default-route \
-		-n openshift-image-registry --template='{{ .spec.host }}')
+[source,sh,role="execute",subs=attributes+]
+----
+podman login -u admin -p $(oc whoami -t) $(oc get route default-route \
+-n openshift-image-registry --template='{{ .spec.host }}')
+----
 
 Lastly, push the image you just built:
 
-    podman push blah
+[source,sh,role="execute",subs=attributes+]
+----
+podman push $(oc get route default-route \
+-n openshift-image-registry \
+--template='{{ .spec.host }}')/openshift-lightspeed/acme-byok:latest
+----
 
 == Modify the OpenShift Lightspeed Configuration
 Now that the image is available in an accessible container registry, you have to 
@@ -100,10 +187,13 @@ Finally, select the YAML tab.
 In the YAML editor, you will want to insert the following yaml segment just before
 the `status` block:
 
-    rag:
-      - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
-        indexID: vector_db_index
-        indexPath: /rag/vector_db
+[source,sh,role="execute",subs=attributes+]
+----
+rag:
+  - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
+    indexID: vector_db_index
+    indexPath: /rag/vector_db
+----
 
 Your full YAML should look something like:
 
