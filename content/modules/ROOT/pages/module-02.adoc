@@ -43,13 +43,16 @@ be logged into the OpenShift cluster:
 oc whoami
 ----
 
-If you don't see `system:admin` as the output, you may need to log in again.
+If you're not logged in, that's OK, but if you are logged in, and you see 
+`system:admin`, you still need to perform the login steps. Why?
 
-== CLI Login (OPTIONAL!)
-If you were not already logged in when running `oc whoami`, follow the next
-steps. Otherwise, skip this section.
+The `system:admin` user is a special user that uses a certificate for
+authentication, but some of the steps you need to perform need to be done as a
+user with a token for authentication, and you can't get a token for
+`system:admin`, so you need to login with the following instructions.
 
-If you go to the OpenShift web console, you will see your login name (`admin`)
+== CLI Login
+Go to the OpenShift web console, and you will see your login name (`admin`)
 in the upper right. Click it, and select _Copy login command_ from the
 dropdown.
 
@@ -175,7 +178,7 @@ the existing one.
 
 In the OpenShift Console, click _Operators_ and then _Installed Operators_ in
 the left hand navigation. Then, make sure to adjust the project dropdown to 
-"All Namespaces" at the top of the screen. 
+"All Projects" at the top of the screen. 
 
 Next, click the OpenShift Lightspeed operator in the list. 
 
@@ -185,17 +188,7 @@ called `cluster` in the list.
 Finally, select the YAML tab.
 
 In the YAML editor, you will want to insert the following yaml segment just before
-the `status` block:
-
-[source,sh,role="execute",subs=attributes+]
-----
-rag:
-  - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
-    indexID: vector_db_index
-    indexPath: /rag/vector_db
-----
-
-Your full YAML should look something like:
+the `status` block. Your full YAML should look something like:
 
     ...
       ols:
@@ -211,6 +204,16 @@ Your full YAML should look something like:
     status:
       conditions:
 
+If you're very familiar with YAML/JSON, the `rag` stanza is at `.spec.ols.rag`.
+
+[source,sh,role="execute",subs=attributes+]
+----
+rag:
+  - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
+    indexID: vector_db_index
+    indexPath: /rag/vector_db
+----
+
 NOTE: You can define multiple RAG databases this way, if you want to add
 multiple sources.
 
@@ -221,7 +224,7 @@ Click the _Workloads_ navigation item on the left, then _Pods_. Next, find the
 _openshift-lightspeed_ project in the dropdown (you will have to toggle the 
 switch _Show default namespaces_).
 
-Wait for the `openshift-lightspeed-...` API server pod to start and for both
+Wait for the `lightspeed-app-server-...` API server pod to start and for both
 containers to be ready, and for the previous deployment's containers to
 terminate and disappear.
 
