@@ -1,9 +1,11 @@
 = Use Your Knowledge
+
 Now that you have re-deployed OpenShift Lightspeed and pointed it to the 
 additional RAG database, you should be able to get answers based on your own
 knowledge and content.
 
 == BYOK Enters the Chat
+
 Go ahead and open the OpenShift Lightspeed chat window and then ask the
 following question:
 
@@ -33,21 +35,25 @@ Try asking queestions about adding GPU nodes and see if you can get a response
 based on the internal documentation.
 
 == Extra Credit
+
 Try creating your own internal "documentation", rebuilding the RAG database,
 re-pushing the image, and seeing how that knowledge can be added to OpenShift
 Lightspeed responses.
 
 == Extra Extra Credit
+
 OpenShift Lightspeed internally logs the conversations and requests to the 
 model provider. Look at the logs of the OpenShift Lightspeed API server pod when
 asking questions so that you can see how the documentation is included and 
 sent with the user's question.
 
 == More Extra Extra Credit
+
 Take time to explore the
 https://docs.redhat.com/en/documentation/red_hat_openshift_lightspeed/1.0tp1/html/configure/ols-configuring-openshift-lightspeed#ols-filtering-and-redacting-information_ols-configuring-openshift-lightspeed[query filter functionality].
 
 == Thank You!
+
 We love user feedback and talking to customers. If you're interested in meeting
 with the OpenShift Lightspeed team, please visit the product page and fill out 
 the form to https://www.redhat.com/en/technologies/cloud-computing/openshift/lightspeed[contact us]:

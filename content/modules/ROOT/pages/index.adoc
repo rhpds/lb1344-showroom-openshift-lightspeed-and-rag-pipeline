@@ -7,6 +7,7 @@ development, root cause analysis, and more. Powered by large language models
 OpenShift more accessible to users and helps increase user productivity.
 
 == OpenShift Lightspeed Architecture
+
 OpenShift Lightspeed today is a relatively small and lightweight system that
 you deploy into each OpenShift Container Platform cluster. The operator deploys
 three components:
@@ -19,12 +20,22 @@ image::ols-arch.png[]
 
 You can also see that OpenShift Lightspeed talks to a model provider. In the
 case of this lab environment, that provider is Azure OpenAI using the GPT-4o
-model.
+model. There are three supported public model providers:
+
+* WatsonX
+* Azure OpenAI
+* OpenAI
+
+Additionally, if you want to self-manage your LLM, we also support the Red Hat
+on-premise model provider solutions:
+
+* OpenShift AI
+* RHEL AI
 
 The little green box says RAG which stands for retrieval-augmented generation.
 
-
 == RAG Basics
+
 RAG is a way of providing additional context to an LLM to help improve the
 quality of responses. When relying on only the LLM, two common problems can
 arise:
