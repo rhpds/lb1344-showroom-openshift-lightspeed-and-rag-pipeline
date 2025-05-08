@@ -11,7 +11,7 @@ following question:
 
 [source,sh,role="execute",subs=attributes+]
 ----
-How do I use a horizontal pod autoscaler at ACME corp?
+How can I use a pod autoscaler at ACME?
 ----
 
 You should see an answer that refers to the prohibition on autoscalers and the
