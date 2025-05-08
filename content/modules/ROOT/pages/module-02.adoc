@@ -1,7 +1,8 @@
 = Add Your Knowledge
+
 Most organizations that have been using OpenShift Container Platform for any
 length of time have developed their own policies, procedures, templates, and
-other organizationally-specific information about OpenShift.
+other organizationally-specific: information about OpenShift.
 
 As you learned earler, OpenShift Lightspeed only uses the OpenShift
 documentation to support answers by default. So, how can you get your important
@@ -15,6 +16,7 @@ take time to talk to us after the lab or schedule a meeting to discuss your
 particular scenarios.
 
 == Examine the documentation
+
 In the web terminal, clone the lab repository:
 
 [source,sh,role="execute",subs=attributes+]
@@ -34,6 +36,7 @@ Take a look at those files using `cat`, `less`, or your favorite tool to get
 an understanding of what they are discussing.
 
 == OpenShift CLI
+
 You will need to perform a few commands using the OpenShift CLI (`oc`). This 
 requires being logged into the cluster. Your terminal session should already
 be logged into the OpenShift cluster:
@@ -52,23 +55,16 @@ user with a token for authentication, and you can't get a token for
 `system:admin`, so you need to login with the following instructions.
 
 == CLI Login
-Go to the OpenShift web console, and you will see your login name (`admin`)
-in the upper right. Click it, and select _Copy login command_ from the
-dropdown.
 
-This will open a new window (and may require reauthentication). You will find an
-`oc login` command there to copy and paste into the terminal. Copy the line that 
-says "Log in with this token". It will look something like:
+You can use the following command to login:
 
 [source,sh,role="execute",subs=attributes+]
 ----
-oc login --token=xx --server=https://api.cluster-xx.opentlc.com:6443
+oc login -u=admin -p={openshift_cluster_admin_password} --server={openshift_api_server_url}
 ----
 
-NOTE: Do not try and copy and paste the above command. Use the one from the 
-webpage that you opened.
-
 == Build the RAG Database Image
+
 In the architecture slide, you saw how OpenShift Lightspeed used a RAG database
 inside the server that provided the relevant documentation to support user 
 questions. Now, you will use a `podman`-based process to build another RAG
@@ -132,6 +128,7 @@ podman load -i ~/lb1344-showroom-openshift-lightspeed-and-rag-pipeline/output/la
 ----
 
 == Tag the Image
+
 Next, tag the image appropriately so that it can be pushed to the registry:
 
 [source,sh,role="execute",subs=attributes+]
@@ -154,6 +151,7 @@ Now that you have tagged the image, you will need to push it into the internal
 OpenShift Container Platform registry.
 
 == Push the Image
+
 Now, login to the container registry with the following command:
 
 [source,sh,role="execute",subs=attributes+]
@@ -172,6 +170,7 @@ podman push $(oc get route default-route \
 ----
 
 == Modify the OpenShift Lightspeed Configuration
+
 Now that the image is available in an accessible container registry, you have to 
 tell the OpenShift Lightspeed Operator to deploy the new RAG database alongside
 the existing one.
@@ -190,36 +189,43 @@ Finally, select the YAML tab.
 In the YAML editor, you will want to insert the following yaml segment just before
 the `status` block. Your full YAML should look something like:
 
-    ...
-      ols:
-		...
-        queryFilters:
-          - name: ip-address
-            pattern: '((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}'
-            replaceWith: <IP-ADDRESS>
-        rag:
-          - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
-            indexID: vector_db_index
-            indexPath: /rag/vector_db
-    status:
-      conditions:
+[source,yaml]
+----
+...
+  ols:
+...
+    queryFilters:
+      - name: ip-address
+        pattern: '((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}'
+        replaceWith: <IP-ADDRESS>
+    rag:
+      - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
+        indexID: vector_db_index
+        indexPath: /rag/vector_db
+status:
+  conditions:
+  ...
+----
 
 If you're very familiar with YAML/JSON, the `rag` stanza is at `.spec.ols.rag`.
+The indentation is very important. The `rag` keyword should be at the same
+indentation as `queryFilters`.
 
-[source,sh,role="execute",subs=attributes+]
+[source,yaml,role="execute",subs=attributes+]
 ----
-rag:
-  - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
-    indexID: vector_db_index
-    indexPath: /rag/vector_db
+    rag:
+      - image: 'image-registry.openshift-image-registry.svc:5000/openshift-lightspeed/acme-byok:latest'
+        indexID: vector_db_index
+        indexPath: /rag/vector_db
 ----
 
 NOTE: You can define multiple RAG databases this way, if you want to add
-multiple sources.
+multiple sources. The `rag` stanza just takes an array of image references.
 
 Click the blue _Save_ button.
 
 == Wait for Lightspeed
+
 Click the _Workloads_ navigation item on the left, then _Pods_. Next, find the
 _openshift-lightspeed_ project in the dropdown (you will have to toggle the 
 switch _Show default namespaces_).

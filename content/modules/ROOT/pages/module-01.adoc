@@ -1,4 +1,5 @@
 = OpenShift Lightspeed Basics
+
 OpenShift Lightspeed uses a natural language interface to allow users to ask
 questions. You have used many chat interfaces before, so OpenShift Lightspeed 
 should feel very comfortable to use.
@@ -14,10 +15,25 @@ something bad, be sure to report it using the feedback feature. We will always
 do our best to improve the quality and safety of the system.
 
 == Starter Question
-Log into your OpenShift console using the admin credentials provided on the 
-original screen where you found the link to this lab guide. Once you have
-logged-in, you should see the OpenShift Lightspeed button in the bottom-right
-corner of the OpenShift console:
+
+Log into the OpenShift web console by clicking the link:
+
+{openshift_cluster_console_url}[OpenShift Console,window=_blank]
+
+Username:
+[source,role="execute",subs=attributes+]
+----
+{openshift_cluster_admin_username}
+----
+
+Password:
+[source,role="execute",subs=attributes+]
+----
+{openshift_cluster_admin_password}
+----
+
+Once you have logged-in, you should see the OpenShift Lightspeed button in the
+bottom-right corner of the OpenShift console:
 
 image::ols-icon.png[]
 
@@ -27,7 +43,7 @@ image::ols-interface.png[]
 
 Why don't you start out by asking an easy question like:
 
-[source,sh,role="execute",subs=attributes+]
+[source,role="execute",subs=attributes+]
 ----
 How do I configure a horizontal pod autoscaler?
 ----
@@ -40,6 +56,7 @@ generate its response:
 image::related-docs.png[]
 
 == Troubleshooting Question
+
 In your environment there is a pod that is failing to schedule for some reason.
 In the OpenShift console, click _Workloads_ on the left, then _Pods_, and then
 make sure to select the project named `broken` from the dropdown at the top of
@@ -61,7 +78,7 @@ image::attach-button.png[]
 
 Then, simply ask:
 
-[source,sh,role="execute",subs=attributes+]
+[source,role="execute",subs=attributes+]
 ----
 What's wrong with this pod?
 ----
@@ -70,7 +87,7 @@ You should get some detailed information about nodes and node selectors.
 
 Now go ahead and attach the complete YAML, and then simply ask:
 
-[source,sh,role="execute",subs=attributes+]
+[source,role="execute",subs=attributes+]
 ----
 Can you fix it?
 ----
@@ -87,6 +104,7 @@ a service, a route, and a deployment. This can make more complicated
 troubleshooting scenarios easier.
 
 == Cluster Interrogation
+
 At this time, OpenShift Lightspeed cannot actively interrogate the cluster via
 the OpenShift/Kubernetes API, but that is a feature we are actively working on
 and hope to have in Technology Preview very soon!
@@ -96,6 +114,7 @@ currently responds. It should give you answers that help you find the answer
 yourself.
 
 == Problem!
+
 Remember that first question you asked about pod autoscalers? Well, you should
 know that at ACME Corp, pod autoscalers are not allowed to be used by default,
 and that there is a special process for enabling autoscaling. Continue
